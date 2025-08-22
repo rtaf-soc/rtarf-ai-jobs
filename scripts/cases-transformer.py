@@ -4,6 +4,8 @@ import os
 import psycopg 
 import json
 import uuid
+import redis
+import hashlib
 from dotenv import load_dotenv
 from psycopg.rows import dict_row
 from sentence_transformers import SentenceTransformer
@@ -15,9 +17,25 @@ PG_DB = os.getenv("PG_DB", "dummy")
 PG_USER = os.getenv("PG_USER", "dummy")
 PG_PASSWORD = os.getenv("PG_PASSWORD", "dummy")
 START_CASE_NO = os.getenv("START_CASE_NO", "1") #386
+REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_PORT = os.getenv("REDIS_PORT", "6379")
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
 
-def insert_data(conn, cur, row, embedded_text, normalized_text, category, chunk_no):
+def insert_data(rd, conn, cur, row, embedded_text, normalized_text, category, chunk_no):
     case_no = row['case_no']
+
+    hash_object = hashlib.sha256(normalized_text.encode())
+    hex_dig = hash_object.hexdigest()
+
+    key = f"case_transformer:{case_no}:{category}:{chunk_no}"
+    value = rd.get(key)
+
+    if (value == hex_dig):
+        # No need to do any transform
+        print(f"Found this key=[{key}], value=[{value}] in cache, no need to do any transform")
+        return
+
+    rd.set(key, hex_dig) #No expiration
 
     sql = """
 INSERT INTO "TextEmbedding"
@@ -84,6 +102,9 @@ def normalized_text(row, field_name, field_name_th):
  
     return json_str
 
+rd = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)
+print(f"Connected to Redis host=[{REDIS_HOST}], port=[{REDIS_HOST}]")
+
 conn = psycopg.connect(
     host=PG_HOST,
     dbname=PG_DB,
@@ -112,13 +133,13 @@ for row in rows:
 
     normalized_summary = normalized_text(row, 'case_summary', 'สรุปเหตุการณ์')
     vector_summary = transform_text(model, normalized_summary)
-    insert_data(conn, cur, row, vector_summary, normalized_summary, 'case_summary', 1)
+    insert_data(rd, conn, cur, row, vector_summary, normalized_summary, 'case_summary', 1)
 
     normalized_desc = normalized_text(row, 'description', 'รายละเอียดเหตุการณ์')
     vector_desc = transform_text(model, normalized_desc)
-    insert_data(conn, cur, row, vector_desc, normalized_desc, 'case_description', 2)
+    insert_data(rd, conn, cur, row, vector_desc, normalized_desc, 'case_description', 1)
 
-    print(f"===\n{normalized_desc}\n")
+    print(f"Transformed case number=[{case_no}]")
 
 print(f"Done processing [{cnt}] records")
 
