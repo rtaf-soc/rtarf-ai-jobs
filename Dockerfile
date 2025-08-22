@@ -1,0 +1,13 @@
+# ใช้ Python base image (เลือก 3.11 หรือ 3.10 ตามต้องการ)
+FROM python:3.11-slim
+
+RUN apt-get update -qq && \
+    apt-get install -y git build-essential wget curl zip unzip apt-transport-https ca-certificates gnupg lsb-release && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY scripts/ .
