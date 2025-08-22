@@ -114,49 +114,49 @@ jobs:
       env:
         SLACK_WEBHOOK_URL: ${{ secrets.SLACK_URL }} # required
 
-#  deploy:
-#    needs: [ build1 ]
-#    runs-on: ubuntu-latest
-#    steps:
+  deploy:
+    needs: [ build1 ]
+    runs-on: ubuntu-latest
+    steps:
 
-#    - name: Slack notification start
-#      if: always()
-#      uses: 8398a7/action-slack@v3
-#      with:
-#        status: ${{ job.status }}
-#        fields: repo,message,commit,author,ref,workflow # selectable (default: repo,message)
-#        text: "Start deploying [ads-ai-jobs] [${{ needs.build1.outputs.imageTag }}] to [${{ needs.build1.outputs.autoDeployEnv }}]..."
-#      env:
-#        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_URL }} # required
+    - name: Slack notification start
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        fields: repo,message,commit,author,ref,workflow # selectable (default: repo,message)
+        text: "Start deploying [ads-ai-jobs] [${{ needs.build1.outputs.imageTag }}] to [${{ needs.build1.outputs.autoDeployEnv }}]..."
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_URL }} # required
 
     # Auto deploy
-#    - name: Deploy
-#      id: deployment
-#      run: |
-#        export ENVIRONMENT=${{ needs.build1.outputs.autoDeployEnv }}
-#        export ARGOCD_BRANCH=${{ needs.build1.outputs.autoDeployBranch }}
-#        export VALUE_FILE_DIR="values/ads-ai-jobs"
-#        export VALUE_FILE=${VALUE_FILE_DIR}/ads-ai-jobs-03-${ARGOCD_BRANCH}-image-tag.yaml
-#        export IMAGE_TAG1=${{ needs.build1.outputs.imageTag }}
-#        git config --global user.email "cicd-auto@ads.com"
-#        git config --global user.name "CICD"
+    - name: Deploy
+      id: deployment
+      run: |
+        export ENVIRONMENT=${{ needs.build1.outputs.autoDeployEnv }}
+        export ARGOCD_BRANCH=${{ needs.build1.outputs.autoDeployBranch }}
+        export VALUE_FILE_DIR="values/ads-jobs-ai"
+        export VALUE_FILE=${VALUE_FILE_DIR}/ads-jobs-ai-03-${ARGOCD_BRANCH}-image-tag.yaml
+        export IMAGE_TAG1=${{ needs.build1.outputs.imageTag }}
+        git config --global user.email "cicd-auto@ads.com"
+        git config --global user.name "CICD"
 
-#        git clone "https://cicd-token:${GH_TOKEN}@github.com/rtaf-soc/rtarf-ads-argocd-apps" deployment
-#        cd deployment
-#        git checkout ${ARGOCD_BRANCH}
-#        cp ${VALUE_FILE_DIR}/ads-ai-jobs-02-image-tag-template.yaml ${VALUE_FILE}
-#        sed -i "s#<<image-tag>>#${IMAGE_TAG1}#g" ${VALUE_FILE}
-#        ls -lrt
-#        cat ${VALUE_FILE}
+        git clone "https://cicd-token:${GH_TOKEN}@github.com/rtaf-soc/rtarf-ads-argocd-apps" deployment
+        cd deployment
+        git checkout ${ARGOCD_BRANCH}
+        cp ${VALUE_FILE_DIR}/ads-jobs-ai-02-image-tag-template.yaml ${VALUE_FILE}
+        sed -i "s#<<image-tag>>#${IMAGE_TAG1}#g" ${VALUE_FILE}
+        ls -lrt
+        cat ${VALUE_FILE}
 
-#        git add ${VALUE_FILE}; git commit --m "Update image tag by auto deploy script"; git push
+        git add ${VALUE_FILE}; git commit --m "Update image tag by auto deploy script"; git push
 
-#    - name: Slack notification end
-#      if: always()
-#      uses: 8398a7/action-slack@v3
-#      with:
-#        status: ${{ job.status }}
-#        fields: repo,message,commit,author,ref,workflow # selectable (default: repo,message)
-#        text: "Done deploying [ads-ai-jobs] [${{ needs.build1.outputs.imageTag }}] to [${{ needs.build1.outputs.autoDeployEnv }}]"
-#      env:
-#        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_URL }} # required
+    - name: Slack notification end
+      if: always()
+      uses: 8398a7/action-slack@v3
+      with:
+        status: ${{ job.status }}
+        fields: repo,message,commit,author,ref,workflow # selectable (default: repo,message)
+        text: "Done deploying [ads-ai-jobs] [${{ needs.build1.outputs.imageTag }}] to [${{ needs.build1.outputs.autoDeployEnv }}]"
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_URL }} # required
