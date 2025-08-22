@@ -1,0 +1,5 @@
+python-dotenv
+sentence-transformers
+torch
+pymilvus
+psycopg[binary]
