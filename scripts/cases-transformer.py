@@ -21,21 +21,25 @@ REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = os.getenv("REDIS_PORT", "6379")
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
 
-def insert_data(rd, conn, cur, row, embedded_text, normalized_text, category, chunk_no):
+def if_found_in_cache(rd, row, normalized_text, category, chunk_no):
     case_no = row['case_no']
 
     hash_object = hashlib.sha256(normalized_text.encode())
     hex_dig = hash_object.hexdigest()
 
-    key = f"case_transformer:{case_no}:{category}:{chunk_no}"
+    key = f"case_transformer_v1:{case_no}:{category}:{chunk_no}"
     value = rd.get(key)
 
     if (value == hex_dig):
         # No need to do any transform
-        print(f"Found this key=[{key}], value=[{value}] in cache, no need to do any transform")
-        return
+        print(f"Found this key=[{key}], in cache, no need to do any transform")
+        return True
 
     rd.set(key, hex_dig) #No expiration
+    return False
+
+def insert_data(conn, cur, row, embedded_text, normalized_text, category, chunk_no):
+    case_no = row['case_no']
 
     sql = """
 INSERT INTO "TextEmbedding"
@@ -128,20 +132,26 @@ for row in rows:
     case_no = row['case_no']
     if int(case_no) < int(START_CASE_NO):
         continue
-    
+
+    print(f"\nProcessing case number=[{case_no}]...")
+    chunk_no = 1
+
+    category = 'case_summary'
+    normalized_summary = normalized_text(row, category, 'สรุปเหตุการณ์')
+    if not if_found_in_cache(rd, row, normalized_summary, category, chunk_no):
+        vector_summary = transform_text(model, normalized_summary)
+        insert_data(conn, cur, row, vector_summary, normalized_summary, category, chunk_no)
+
+    category = 'description'
+    normalized_desc = normalized_text(row, category, 'รายละเอียดเหตุการณ์')
+    if not if_found_in_cache(rd, row, normalized_desc, category, chunk_no):
+        vector_desc = transform_text(model, normalized_desc)
+        insert_data(conn, cur, row, vector_desc, normalized_desc, category, chunk_no)
+
     cnt += 1
-
-    normalized_summary = normalized_text(row, 'case_summary', 'สรุปเหตุการณ์')
-    vector_summary = transform_text(model, normalized_summary)
-    insert_data(rd, conn, cur, row, vector_summary, normalized_summary, 'case_summary', 1)
-
-    normalized_desc = normalized_text(row, 'description', 'รายละเอียดเหตุการณ์')
-    vector_desc = transform_text(model, normalized_desc)
-    insert_data(rd, conn, cur, row, vector_desc, normalized_desc, 'case_description', 1)
-
     print(f"Transformed case number=[{case_no}]")
 
-print(f"Done processing [{cnt}] records")
+print(f"\nDone processing [{cnt}] records")
 
 cur.close()
 conn.close()
