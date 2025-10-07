@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import time
 import psycopg
 import redis
 from dotenv import load_dotenv
@@ -16,6 +17,7 @@ PG_PASSWORD = os.getenv("PG_PASSWORD", "dummy")
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = os.getenv("REDIS_PORT", "6379")
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
+DELAY_SEC = os.getenv("DELAY_SEC", "10")
 
 def create_sigma_lucene_query(rule_name, rule_def, key_config):
     lucene = ""
@@ -29,9 +31,11 @@ def create_sigma_lucene_query(rule_name, rule_def, key_config):
         f.write(rule_def)
 
     config_file = f"{cfg_dir}/{key_config}.yaml"
+    print(f"Processing rule [{rule_name}] => [{config_file}]")
+
     if os.path.exists(config_file):
         #print(f"Processing rule [{rule_name}] => [{config_file}]")
-        #print(f"Rule definition saved to [{tmp_file}]")
+        print(f"Rule definition saved to [{tmp_file}]")
 
         result = subprocess.run(
             ["sigmac", "-t", "es-qs", "-c", config_file, tmp_file],
@@ -106,3 +110,5 @@ print(f"Done processing [{cnt}] records")
 
 cur.close()
 conn.close()
+
+time.sleep(int(DELAY_SEC))
