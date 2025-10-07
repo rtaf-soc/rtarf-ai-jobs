@@ -13,6 +13,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 ENV PATH="/root/.local/bin:${PATH}"
 
 # Testing installation
-RUN sigmac --version
+RUN sigmac -h
 
 COPY scripts/ .
