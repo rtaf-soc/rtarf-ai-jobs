@@ -1,0 +1,17 @@
+title: Zeek SMB Files Field Mapping
+order: 20
+
+fields:
+  name: zeek.smb_files.name         # ← field ที่บันทึกชื่อไฟล์/พาธ
+  src_ip: zeek.source.ip
+  dst_ip: zeek.destination.ip
+  src_port: zeek.source.port
+  dst_port: zeek.destination.port
+  uid: zeek.uid
+  # เพิ่ม field อื่น ๆ ที่คุณใช้บ่อยใน detection rule
+
+index:
+  - zeek-*
+
+backends:
+  - es-qs
