@@ -17,6 +17,7 @@ PG_PASSWORD = os.getenv("PG_PASSWORD", "dummy")
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = os.getenv("REDIS_PORT", "6379")
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
+DELAY_SEC = os.getenv("DELAY_SEC", "10")
 
 def create_sigma_lucene_query(rule_name, rule_def, key_config):
     lucene = ""
@@ -110,4 +111,4 @@ print(f"Done processing [{cnt}] records")
 cur.close()
 conn.close()
 
-time.sleep(300)
+time.sleep(int(DELAY_SEC))
