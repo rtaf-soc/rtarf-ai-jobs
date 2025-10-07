@@ -38,7 +38,7 @@ def create_sigma_lucene_query(rule_name, rule_def, key_config):
             capture_output=True, text=True
         )
 
-        lucene = result.stdout.strip()
+        lucene = result.stdout.strip() or "N/A"
         #print(f"Lucene => [{lucene}]")
 
         is_ok = True
@@ -48,8 +48,20 @@ def create_sigma_lucene_query(rule_name, rule_def, key_config):
     return is_ok, lucene
 
 def update_rule_lucene(conn, rule_lucenes):
+
+    sql = """UPDATE "HuntingRules" SET lucene_query = %s WHERE rule_id = %s"""
+
     for r in rule_lucenes:
-        print(f"[{r['id']}]:[{r['name']}] => [{r['lucene']}]")
+        lucene = r['lucene']
+        id = r['id']
+        name = r['name']
+
+        print(f"[{id}]:[{name}] => [{lucene}]")
+
+        values = (lucene, id)
+        cur.execute(sql, values)
+
+        conn.commit()
 
     return
 
@@ -89,8 +101,8 @@ for row in rows:
 
     cnt += 1
 
-cur.close()
-conn.close()
-
 update_rule_lucene(conn, rules_array)
 print(f"Done processing [{cnt}] records")
+
+cur.close()
+conn.close()
