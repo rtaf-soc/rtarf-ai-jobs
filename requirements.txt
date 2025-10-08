@@ -4,8 +4,4 @@ torch
 pymilvus
 psycopg[binary]
 redis
-#langchain-google-genai
-#langchain
-#langchain-community==0.2.6
-#langgraph
-#sigmatools>=0.15.0
+sigmatools>=0.15.0
