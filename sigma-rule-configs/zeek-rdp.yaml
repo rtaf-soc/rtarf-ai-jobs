@@ -1,0 +1,5 @@
+title: Zeek RDP Public Access Field Mapping
+order: 10
+
+fields:
+  id.orig_h: source.address

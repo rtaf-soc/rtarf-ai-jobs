@@ -1,0 +1,15 @@
+title: Zeek HTTP
+order: 10
+
+fields:
+  id.resp_h: destination.address
+  user_agent: user_agent.original
+  method: http.request.method
+  host: url.domain
+  uri: url.original
+  resp_mime_types: zeek.http.resp_mime_types
+  c-useragent: user_agent.original
+  c-uri: url.original
+  status_code: http.response.status_code
+  request_body_len: http.response.body.bytes
+  #client_header_names:
