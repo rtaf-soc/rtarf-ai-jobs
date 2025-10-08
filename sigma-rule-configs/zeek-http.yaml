@@ -10,6 +10,7 @@ fields:
   resp_mime_types: zeek.http.resp_mime_types
   c-useragent: user_agent.original
   c-uri: url.original
+  c-url: url.original
   status_code: http.response.status_code
   request_body_len: http.response.body.bytes
   #client_header_names:
