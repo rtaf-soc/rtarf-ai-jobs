@@ -5,8 +5,10 @@ import subprocess
 import time
 import psycopg
 import redis
+import re
 from dotenv import load_dotenv
 from psycopg.rows import dict_row
+import yaml
 
 load_dotenv()
 
@@ -18,6 +20,19 @@ REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
 REDIS_PORT = os.getenv("REDIS_PORT", "6379")
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
 DELAY_SEC = os.getenv("DELAY_SEC", "10")
+
+def load_field_mapping(mapping_file):
+    with open(mapping_file, 'r') as f:
+        data = yaml.safe_load(f)
+    # data['fields'] เป็น dict {rule_field: target_field}
+    return data.get('fields', {})
+
+def replace_fields(query, field_mapping):
+    for orig_field, target_field in field_mapping.items():
+        # replace field.keyword / field.* → target_field.keyword
+        pattern = re.compile(rf'\b{re.escape(orig_field)}\b(\.keyword)?')
+        query = pattern.sub(f"{target_field}.keyword", query)
+    return query
 
 def create_sigma_lucene_query(rule_name, rule_def, key_config):
     lucene = ""
@@ -34,6 +49,8 @@ def create_sigma_lucene_query(rule_name, rule_def, key_config):
     print(f"Processing rule [{rule_name}] => [{config_file}]")
 
     if os.path.exists(config_file):
+        fields_map = load_field_mapping(config_file)
+
         #print(f"Processing rule [{rule_name}] => [{config_file}]")
         print(f"Rule definition saved to [{tmp_file}]")
 
@@ -42,8 +59,8 @@ def create_sigma_lucene_query(rule_name, rule_def, key_config):
             capture_output=True, text=True
         )
 
-        lucene = result.stdout.strip() or "N/A"
-        #print(f"Lucene => [{lucene}]")
+        es_query = result.stdout.strip() or "N/A"
+        lucene = replace_fields(es_query, fields_map).strip()
 
         is_ok = True
     else:
@@ -66,7 +83,6 @@ def update_rule_lucene(conn, rule_lucenes):
         cur.execute(sql, values)
 
         conn.commit()
-
     return
 
 rd = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, decode_responses=True)

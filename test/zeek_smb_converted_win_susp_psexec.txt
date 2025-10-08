@@ -1,0 +1,1 @@
+((path.keyword:*\\\* AND path.keyword:*\\IPC$* AND name.keyword:(*\-stdin OR *\-stdout OR *\-stderr)) AND (NOT (name.keyword:PSEXESVC*)))
