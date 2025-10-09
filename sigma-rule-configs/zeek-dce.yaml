@@ -1,0 +1,8 @@
+title: Zeek DNS Files Field Mapping
+order: 20
+
+fields:
+  operation: zeek.dce_rpc.operation
+  path: zeek.dce_rpc.path
+  name: zeek.dce_rpc.name
+  endpoint: zeek.dce_rpc.endpoint
