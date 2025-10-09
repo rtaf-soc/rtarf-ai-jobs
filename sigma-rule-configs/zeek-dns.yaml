@@ -1,0 +1,9 @@
+title: Zeek DNS Files Field Mapping
+order: 20
+
+fields:
+  query: zeek.dns.query
+  qtype_name: zeek.dns.qtype_name
+  answers: zeek.dns.answers
+  id.resp_p: destination.port
+  rejected: zeek.dns.rejected
